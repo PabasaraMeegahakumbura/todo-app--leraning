@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: todo-app
 spec:
-  replica: 1
+  replicas: 1
   selector:
     matchLabels:
       app: todo-app
