@@ -1,0 +1,19 @@
+name: Backend tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Run backend tests through Docker
+        run: docker build --target test --progress=plain .
