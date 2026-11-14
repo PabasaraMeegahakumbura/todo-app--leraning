@@ -19,6 +19,13 @@ jobs:
       - name: Download repository
         uses: actions/checkout@v6
 
+      - name: Validate Kubernetes manifests
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE/k8s:/manifests:ro" \
+            ghcr.io/yannh/kubeconform:v0.8.0 \
+            -strict -summary -kubernetes-version 1.36.0 /manifests
+            
       - name: Set image name
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
 
