@@ -102,6 +102,15 @@ async function removeItem(id) {
     });
 }
 
+async function checkHealth() {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT 1', (err) => {
+            if (err) return reject(err);
+            resolve();
+        });
+    });
+}
+
 module.exports = {
     init,
     teardown,
@@ -110,4 +119,5 @@ module.exports = {
     storeItem,
     updateItem,
     removeItem,
+    checkHealth,
 };

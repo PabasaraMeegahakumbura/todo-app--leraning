@@ -123,7 +123,20 @@ async function removeItem(id) {
         });
     });
 }
-
+async function checkHealth() {
+    return new Promise((resolve, reject) => {
+        pool.query(
+            {
+                sql: 'SELECT 1',
+                timeout: 2000,
+            },
+            (err) => {
+                if (err) return reject(err);
+                resolve();
+            },
+        );
+    });
+}
 module.exports = {
     init,
     teardown,
@@ -132,4 +145,5 @@ module.exports = {
     storeItem,
     updateItem,
     removeItem,
+    checkHealth,
 };
