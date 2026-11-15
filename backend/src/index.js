@@ -1,14 +1,19 @@
 const express = require('express');
 const app = express();
 const db = require('./persistence');
+
 const getGreeting = require('./routes/getGreeting');
 const getItems = require('./routes/getItems');
 const addItem = require('./routes/addItem');
 const updateItem = require('./routes/updateItem');
 const deleteItem = require('./routes/deleteItem');
+const { live, ready } = require('./routes/getHealth');
 
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
+
+app.get('/api/health/live', live);
+app.get('/api/health/ready', ready);
 
 app.get('/api/greeting', getGreeting);
 app.get('/api/items', getItems);
@@ -33,4 +38,4 @@ const gracefulShutdown = () => {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
-process.on('SIGUSR2', gracefulShutdown); // Sent by nodemon
+process.on('SIGUSR2', gracefulShutdown);
