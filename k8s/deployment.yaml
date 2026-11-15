@@ -55,6 +55,17 @@ spec:
                 configMapKeyRef:
                   name: todo-config
                   key: GREETING     
+            - name: MYSQL_HOST
+              value: todo-mysql
+            - name: MYSQL_DB
+              value: todos
+            - name: MYSQL_USER
+              value: root
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: todo-mysql-secret
+                  key: mysql-root-password
 
       volumes:
         - name: todo-storage
