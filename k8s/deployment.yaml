@@ -19,9 +19,7 @@ spec:
           image: ghcr.io/pabasarameegahakumbura/todo-app--leraning:ae9e9d2903d4809f2ee3b688ed48255aa4f5dc68
           ports:
             - containerPort: 3000
-          volumeMounts:
-            - name: todo-storage
-              mountPath: /etc/todos
+
           startupProbe:
             httpGet:
               path: /api/greeting
@@ -67,7 +65,3 @@ spec:
                   name: todo-mysql-secret
                   key: mysql-root-password
 
-      volumes:
-        - name: todo-storage
-          persistentVolumeClaim:
-            claimName: todo-data
