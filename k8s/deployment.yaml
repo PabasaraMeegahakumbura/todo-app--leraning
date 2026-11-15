@@ -12,8 +12,6 @@ spec:
   selector:
     matchLabels:
       app: todo-app
-  strategy:
-    type: Recreate
   template:
     metadata:
       labels:
