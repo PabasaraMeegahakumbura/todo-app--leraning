@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: todo-app
-          image: ghcr.io/pabasarameegahakumbura/todo-app--leraning:7eabee25d70e0d4876415723bb3b345106c31d01
+          image: ghcr.io/pabasarameegahakumbura/todo-app--leraning:ae9e9d2903d4809f2ee3b688ed48255aa4f5dc68
           ports:
             - containerPort: 3000
           volumeMounts:
@@ -49,6 +49,12 @@ spec:
             limits:
               cpu: "500m"
               memory: "256Mi"
+          env:
+            - name: GREETING
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: GREETING     
 
       volumes:
         - name: todo-storage
