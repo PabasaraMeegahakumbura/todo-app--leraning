@@ -1,5 +1,11 @@
 # Getting Started Todo App
 
+## Local learning environment recovery
+
+See [the Kubernetes recovery guide](docs/local-cluster-recovery.md) for diagnosis,
+Secret recreation, MySQL backup restoration, application recovery, metrics,
+and autoscaling after loss of the local cluster.
+
 This project provides a sample todo list application. It demonstrates all of
 the current Docker best practices, ranging from the Compose file, to the
 Dockerfile, to CI (using GitHub Actions), and running tests. It's intended to 
