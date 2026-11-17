@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: todo-app
-          image: ghcr.io/pabasarameegahakumbura/todo-app--leraning:9b5ebf58bc725b9031aea9b81c4a7ff9612b8c8e
+          image: ghcr.io/pabasarameegahakumbura/todo-app--leraning:030fde9c46222d0520763fe3cc1eba5693d9faba
           ports:
             - containerPort: 3000
 
