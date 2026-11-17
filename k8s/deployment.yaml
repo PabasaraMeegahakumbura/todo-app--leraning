@@ -14,6 +14,8 @@ spec:
       app: todo-app
   template:
     metadata:
+      annotations:
+        learning.clearday.dev/release: "auto-sync-test-1"
       labels:
         app: todo-app
     spec:
