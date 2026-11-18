@@ -10,7 +10,8 @@ Namespace: traefik
 ```powershell
 helm repo add traefik https://traefik.github.io/charts
 helm repo update
-helm upgrade --install traefik traefik/traefik --version 42.4.1 --namespace traefik --create-namespace --kube-context docker-desktop --wait --timeout 5m
+helm upgrade --install traefik traefik/traefik --version 42.4.1 --namespace traefik --create-namespace --kube-context docker-desktop --wait --timeout 5m -f infrastructure/traefik/values.yaml
+
 ```
 
 ## Verify
