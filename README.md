@@ -1,81 +1,122 @@
 # Clear Day
 
-A calm task workspace built as a practical DevOps learning project. Add tasks,
-mark them complete, search your list, and switch between all, active, and
-completed tasks. The interface works on phones and desktops, uses system fonts,
-and needs no external font service or UI library at runtime.
+Clear Day is a lightweight shared task workspace and an end-to-end DevOps
+learning project, adapted from Docker's Getting Started Todo App. The UI supports
+adding, completing, deleting, searching, and filtering tasks, with progress and
+error states. There is no login or per-user task ownership.
 
-This is a shared task list: there are no accounts or private per-user lists.
-Anyone who can access the app's API can modify its tasks. Keep the learning
-installation on a trusted network.
+## Start reading here
 
-## Run the development stack
+| Guide | What you will learn |
+| --- | --- |
+| [Learning journey](docs/learning-journey.md) | The lessons in order, with explanations, commands, and checkpoints |
+| [Architecture](docs/architecture.md) | How the UI, API, database, containers, Kubernetes, and GitOps fit together |
+| [Setup and infrastructure](docs/setup.md) | Recreate the local environment, credentials, routing, and HTTPS |
+| [Daily operations](docs/operations.md) | Make releases, inspect workloads, scale, and recover a bad deployment |
+| [Backup and recovery](docs/recovery.md) | Back up MySQL, test restoration, and rebuild a missing cluster |
+| [Troubleshooting](docs/troubleshooting.md) | Diagnose the issues encountered during the project |
+| [Glossary](docs/glossary.md) | Plain-language definitions of technical terms |
 
-With Docker Desktop running, use the repository root:
+The guides describe the repository checked on November 18, 2026 and the lessons
+completed in this project. Commands are for Windows PowerShell unless marked
+SQL or Linux shell. Execute setup commands only when needed, not as a checklist
+to rerun against a healthy environment. They are documented procedures, not an
+automated installation script or a production certification.
+
+## Current application entry point
+
+Open **https://clearday.localhost** on the configured development computer.
+HTTP redirects to HTTPS. Traefik terminates TLS and forwards to the internal
+`todo-app` ClusterIP Service, port 8082, then Express port 3000. The Service no
+longer publishes `localhost:8082` to Windows.
+
+Argo CD is at **https://localhost:8083**, with its own local certificate behavior
+and admin credentials. The Clear Day certificate does not secure Argo CD.
+
+```mermaid
+flowchart LR
+    Browser -->|HTTPS| Traefik
+    Traefik --> Service[Internal app Service]
+    Service --> Pods[App Pods]
+    Pods --> MySQL[(MySQL)]
+    MySQL --> PVC[Persistent database volume]
+```
+
+## Quick development and build commands
+
+From the repository root:
 
 ```powershell
+docker compose config --quiet
 docker compose up --watch
 ```
 
-Open http://localhost. Compose starts Traefik, Vite, Express, MySQL, and
-phpMyAdmin. The database browser is available at http://db.localhost.
-The sample Compose credentials are for local development only.
+The Compose development stack uses http://localhost and http://db.localhost.
+Its proxy also needs host port 80, which conflicts with the Kubernetes Traefik
+listener. Choose one port-80 environment at a time. Compose and Kubernetes have
+separate databases; starting Compose will not show Kubernetes tasks.
 
 ```powershell
 docker compose down
-```
-
-This stops the stack while retaining its database volume. Adding `-v` removes
-volumes and their data.
-
-## Build and test
-
-```powershell
 docker build --target test --progress=plain .
 docker build -t clear-day:local .
+docker run -d --name clear-day-local -p 8084:3000 -v clear-day-local-data:/etc/todos clear-day:local
 ```
 
-The test target runs backend Jest tests. The final image builds React into
-static files and bundles them with Express. Run it with its own SQLite volume:
+The standalone image uses SQLite unless MySQL environment settings are supplied.
+Choose an unused port/name if a preview already occupies 8084. `compose down`
+retains its named volume; `down -v` deletes it. Do not use volume deletion as a
+normal troubleshooting step.
 
-```powershell
-docker run -d --name clear-day -p 8084:3000 -v clear-day-data:/etc/todos clear-day:local
+## Delivery workflow
+
+```text
+Code PR → tests + manifest validation → merge → final image published to GHCR
+Deployment tag PR → merge → Argo CD automatic sync → Kubernetes rolling update
 ```
 
-Open http://localhost:8084. Setting `MYSQL_HOST` switches persistence to MySQL;
-otherwise the backend uses SQLite. Database data is separate from the image.
+Publishing alone does not deploy a new app version. The reviewed Deployment
+image tag selects the version. One short-lived branch can contain several
+related commits and documentation updates; a branch per tiny edit is unnecessary.
 
-## Project guide
+## Security and persistence boundaries
 
-- [Architecture](docs/architecture.md): frontend, API, databases, and deployment.
-- `client/src/App.jsx`: task workspace and API interactions.
-- `client/src/index.scss`: responsive styles; no Bootstrap stylesheet import.
-- `backend/src`: Express routes and persistence adapters.
-- `k8s`: Kubernetes app, database, storage, health probes, and autoscaling.
-- `infrastructure/argocd`: Argo CD infrastructure configuration, when present.
-- `.github/workflows/ci.yml`: tests, manifest validation, image build/publishing.
+- The app is a shared list with no authentication. HTTPS is not access control.
+- Real passwords, private keys, Secret exports, and SQL backups stay outside Git.
+- App account: `todo_app`; root credentials are reserved for administration.
+- MySQL has one Pod and a 1 GiB PVC. App replicas do not make it highly available.
+- A PVC is not a backup. The local SQL backup is not protection against losing
+  the whole laptop; a separate protected copy is needed for that.
+- Metrics Server's kubelet TLS exception is limited to the local learning setup.
+- Argo CD auto-sync is on; prune and self-heal are off.
 
-## Kubernetes and GitOps
+## Repository map
 
-Use only your intended cluster context. For the learning setup, explicitly use
-`--context docker-desktop`. Review Argo CD's diff before manually syncing Git's
-`main/k8s` configuration. Keep pruning disabled for the initial lessons and
-exclude the legacy `pvc.yaml` SQLite claim. Argo CD's dashboard configuration
-belongs outside the application's `k8s` source directory.
+```text
+client/                    React UI and Vite build
+backend/src/               Express API and database adapters
+backend/spec/              Jest tests
+Dockerfile                 Multi-stage development, test, and final image
+compose.yaml               Five-service local development stack
+.github/workflows/ci.yml    Validate, test/build, and publish
+k8s/                       Application manifests watched by Argo CD
+infrastructure/argocd/     Argo CD Application and dashboard Service
+infrastructure/traefik/    Pinned Helm installation instructions and values
+docs/                      Learning, operating, and recovery handbook
+```
 
-Publishing a new image does not update Kubernetes automatically: update the
-Deployment's image tag in a reviewed commit, merge, then sync Argo CD. A UI-only
-change still needs a new final image because the frontend assets are baked in.
-Do not recreate databases or PVCs just to deploy a new interface.
+## Known follow-ups
 
-Root and application database passwords are supplied separately as Kubernetes
-Secrets, not committed manifests. The app expects `todo-app-db-secret` with key
-`password`; MySQL expects `todo-mysql-secret` with key `mysql-root-password`.
-Database users must exist with appropriate permissions. Back up MySQL separately;
-Git and Argo CD do not store database data or Secret values.
+The app manifest currently still declares `replicas: 2`; HPA also manages the
+count. Remove that field in a separate reviewed configuration change to avoid
+resetting the HPA count during future syncs. CI still triggers on all pushes and
+PRs, so a learning branch with a PR can have two runs. Legacy client components
+and dependencies remain unused by the Clear Day UI. See the guides for further
+limits; documentation does not silently change any of these settings.
 
 ## Credits and license
 
-Adapted from Docker's `docker/getting-started-todo-app`. The Clear Day interface
-and learning documentation replace the sample presentation. The original Apache
-2.0 license and applicable attribution are retained in `LICENSE`.
+Based on [Docker's Getting Started Todo App](https://github.com/docker/getting-started-todo-app).
+The Clear Day presentation and learning documentation replace the sample UI and
+guide. Retain the original Apache 2.0 license and applicable attribution in
+[LICENSE](LICENSE).
